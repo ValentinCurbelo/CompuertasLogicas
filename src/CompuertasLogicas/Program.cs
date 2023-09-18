@@ -1,114 +1,202 @@
-﻿namespace compuertas;
+﻿using System;
 
-public class Program
+public interface IGate
 {
+    string GetName();
+    bool? Calculate();
+}
 
-    //Clase Compuerta
-    public class Compuerta
+class GateAND : IGate
+{
+    private string name;
+    private object[] inputs;
+
+    public GateAND(string nombre, int inputCount)
     {
-        //Atributos
-        public bool entrada1;
-        public bool entrada2;
-        public bool salida;
+        name = nombre;
+        inputs = new object[inputCount];
+    }
 
-        //Constructor
-        public Compuerta(bool entrada1, bool entrada2)
+    public string GetName()
+    {
+        return name;
+    }
+
+    public void SetInput(int index, object value)
+    {
+        if (index >= 0 && index < inputs.Length)
         {
-            this.entrada1 = entrada1;
-            this.entrada2 = entrada2;
+            inputs[index] = value;
         }
+    }
 
-        //Metodos
-        public virtual void Calcular()
+    public bool? Calculate()
+    {
+        int product = 1;
+        foreach (var input in inputs)
         {
-            Console.WriteLine("Compuerta");
+            if (input is int intValue)
+            {
+                if (intValue == 0 || intValue == 1)
+                {
+                    product *= intValue;
+                }
+                else
+                {
+                    return null; // No se puede calcular si hay un valor no válido.
+                }
+            }
+            else if (input is IGate gate)
+            {
+                var result = gate.Calculate();
+                if (result.HasValue)
+                {
+                    product *= result.Value ? 1 : 0;
+                }
+                else
+                {
+                    return null; // No se puede calcular si una entrada es nula.
+                }
+            }
+        }
+        return product == 1;
+    }
+}
+
+class GateOR : IGate
+{
+    private string name;
+    private object[] inputs;
+
+    public GateOR(string nombre, int inputCount)
+    {
+        name = nombre;
+        inputs = new object[inputCount];
+    }
+
+    public string GetName()
+    {
+        return name;
+    }
+
+    public void SetInput(int index, object value)
+    {
+        if (index >= 0 && index < inputs.Length)
+        {
+            inputs[index] = value;
+        }
+    }
+
+    public bool? Calculate()
+    {
+        int sum = 0;
+        foreach (var input in inputs)
+        {
+            if (input is int intValue)
+            {
+                if (intValue == 0 || intValue == 1)
+                {
+                    sum += intValue;
+                }
+                else
+                {
+                    return null; // No se puede calcular si hay un valor no válido.
+                }
+            }
+            else if (input is IGate gate)
+            {
+                var result = gate.Calculate();
+                if (result.HasValue)
+                {
+                    sum += result.Value ? 1 : 0;
+                }
+                else
+                {
+                    return null; // No se puede calcular si una entrada es nula.
+                }
+            }
+        }
+        return sum > 0;
+    }
+}
+
+class GateNOT : IGate
+{
+    private string name;
+    private object input;
+
+    public GateNOT(string nombre)
+    {
+        name = nombre;
+        input = null;
+    }
+
+    public string GetName()
+    {
+        return name;
+    }
+
+    public void SetInput(object value)
+    {
+        input = value;
+    }
+
+    public bool? Calculate()
+    {
+        if (input != null)
+        {
+            if (input is int intValue)
+            {
+                if (intValue == 0)
+                {
+                    return true;
+                }
+                else if (intValue == 1)
+                {
+                    return false;
+                }
+                else
+                {
+                    return null; // Valor no válido.
+                }
+            }
+            else if (input is IGate gate)
+            {
+                var result = gate.Calculate();
+                if (result.HasValue)
+                {
+                    return !result.Value;
+                }
+                else
+                {
+                    return null; // No se puede calcular si una entrada es nula.
+                }
+            }
+        }
+        return null; // Entrada nula.
+    }
+}
+
+class Program
+{
+    static void Main()
+    {
+        // Ejemplo de uso:
+        GateAND andGate = new GateAND("AND1", 2);
+        andGate.SetInput(0, 1);
+        andGate.SetInput(1, 0);
+
+        GateNOT notGate = new GateNOT("NOT1");
+        notGate.SetInput(andGate);
+
+        bool? result = notGate.Calculate();
+        if (result.HasValue)
+        {
+            Console.WriteLine($"Resultado de {notGate.GetName()}: {result.Value}");
+        }
+        else
+        {
+            Console.WriteLine($"No se puede calcular el resultado de {notGate.GetName()}");
         }
     }
 }
-    //Clase Compuerta AND
-    public class CompuertaAND : Compuerta
-    {
-        //Constructor
-        public CompuertaAND(bool entrada1, bool entrada2) : base(entrada1, entrada2)
-        {
-        }
-
-        //Metodos
-        public override void Calcular()
-        {
-            if (entrada1 == true && entrada2 == true)
-            {
-                salida = true;
-            }
-            else
-            {
-                salida = false;
-            }
-        }
-    }
-
-    //Clase Compuerta OR
-    public class CompuertaOR : Compuerta
-    {
-        //Constructor
-        public CompuertaOR(bool entrada1, bool entrada2) : base(entrada1, entrada2)
-        {
-        }
-
-        //Metodos
-        public override void Calcular()
-        {
-            if (entrada1 == true || entrada2 == true)
-            {
-                salida = true;
-            }
-            else
-            {
-                salida = false;
-            }
-        }
-    }
-
-    //Clase Compuerta NOT
-    public class CompuertaNOT : Compuerta
-    {
-        //Constructor
-        public CompuertaNOT(bool entrada1) : base(entrada1, false)
-        {
-        }
-
-        //Metodos
-        public override void Calcular()
-        {
-            if (entrada1 == true)
-            {
-                salida = false;
-            }
-            else
-            {
-                salida = true;
-            }
-        }
-    }
-
-    //Clase Compuerta XOR
-    public class CompuertaXOR : Compuerta
-    {
-        //Constructor
-        public CompuertaXOR(bool entrada1, bool entrada2) : base(entrada1, entrada2)
-        {
-        }
-
-        //Metodos
-        public override void Calcular()
-        {
-            if (entrada1 == true && entrada2 == false || entrada1 == false && entrada2 == true)
-            {
-                salida = true;
-            }
-            else
-            {
-                salida = false;
-            }
-        }
-    }
