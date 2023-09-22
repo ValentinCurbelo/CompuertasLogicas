@@ -26,5 +26,24 @@ public class Program
         {
             Console.WriteLine($"No se puede calcular el resultado de {notGate.GetName()}");
         }
+
+        //Ejemplo de uso de GarageGate:
+        
+        GarageGate garageGate = new GarageGate();
+
+        // Prueba de las condiciones de apertura
+        Console.WriteLine("Puerta abierta: " + garageGate.OpenGate()); // Debe ser false
+
+        garageGate.PressButtonA();
+        garageGate.PressButtonB();
+        garageGate.PressButtonC();
+
+        Console.WriteLine("Puerta abierta: " + garageGate.OpenGate()); // Debe ser true
+
+        garageGate.ReleaseButtonA();
+        garageGate.ReleaseButtonB();
+        garageGate.ReleaseButtonC();
+
+        Console.WriteLine("Puerta abierta: " + garageGate.OpenGate()); // Debe ser false
     }
 }
